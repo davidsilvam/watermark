@@ -112,14 +112,20 @@ int main() {
     widthImg2 = atoi(widthText);
     heightImg2 = atoi(heightText);
 
-    unsigned char mapPixels2[widthImg2 * heightImg2 * 3];
+    unsigned char mapPixels2[heightImg2][widthImg2][3];
 
     // preencher mapa de pixels
     fseek(fp, 4, SEEK_CUR);
-    for (i = 0; i < widthImg2 * heightImg2 * 3; i++) {
-        fread(mapPixels2 + i, sizeof(char), 1, fp);
-    }
+    for (posX = 0, posY = -1; posX != widthImg2 + 1 && posY != 78; posX++) {
+        posX %= widthImg2;
+        if (posX == 0) {
+            posY += 1;
+        }
 
+        fread(&mapPixels2[posY][posX][0], sizeof(char), 1, fp);
+        fread(&mapPixels2[posY][posX][1], sizeof(char), 1, fp);
+        fread(&mapPixels2[posY][posX][2], sizeof(char), 1, fp);
+    }
     //
     fclose(fp);
 
@@ -128,64 +134,21 @@ int main() {
     fp = fopen("/home/macabeus/ApenasMeu/Dropbox/CEFET/SistemasEmbarcados/marcadagua/new.ppm", "wb");
     fputs("P6\n81 78\n255\n", fp); // todo: usar as dimensões de acordo com a maior imagem!
 
-    //o código de iterar abaixo não está dando certo, talvez usar a solução da gabi que é passando pelos índices
-    //        int numero           //numero que vc quer saber o indice
-
-    //        int coluna             //coluna que ele está
-    //        int linha                //linha que ele está
-
-    //        int colunaCount  //descobre com modulo
-
-    //        linha = (numero/colunaCount)-1
-    //        coluna = matriz[0][coluna] - (linha * countColuna)
-
     for (posX = 0, posY = -1; posX != widthImg1 + 1 && posY != 78; posX++) {
         posX %= widthImg1;
         if (posX == 0) {
             posY += 1;
         }
 
-        if (mapPixels[posY][posX][0] == 0xFF && mapPixels[posY][posX][1] == 0xFF && mapPixels[posY][posX][2] == 0xFF) {
-            fputc(0x44, fp);
-            fputc(0x44, fp);
-            fputc(0x44, fp);
+        if (widthImg2 > posX && heightImg2 > posY) {
+            fputc((char) (mapPixels[posY][posX][0] * 0.5 + mapPixels2[posY][posX][0] * 0.5), fp);
+            fputc((char) (mapPixels[posY][posX][1] * 0.5 + mapPixels2[posY][posX][1] * 0.5), fp);
+            fputc((char) (mapPixels[posY][posX][2] * 0.5 + mapPixels2[posY][posX][2] * 0.5), fp);
         } else {
             fputc(mapPixels[posY][posX][0], fp);
             fputc(mapPixels[posY][posX][1], fp);
             fputc(mapPixels[posY][posX][2], fp);
         }
-    }
-
-    fclose(fp);
-
-    return 0;
-
-    for (posX = 0, posY = -1; posX != widthImg1 + 1 && posY != 78; posX++) {
-        posX %= widthImg1;
-        if (posX == 0) {
-            posY += 1;
-        }
-
-        /*if (mapPixels[posX * posY] == 0x255 && mapPixels[(posX * posY) + 1] == 0x255 && mapPixels[(posX * posY) + 2] == 0x255) {
-            fputc(0x100, fp);
-            fputc(0x100, fp);
-            fputc(0x100, fp);
-        } else {*/
-            fputc(mapPixels[posX][posY][0], fp);
-            fputc(mapPixels[posX][posY][1], fp);
-            fputc(mapPixels[posX][posY][2], fp);
-        //}
-
-
-        /*if (posX <= widthImg2 && posY <= heightImg2) {
-            fputc(mapPixels2[posX * posY * 3], fp);
-            fputc(mapPixels2[(posX * posY * 3) + 1], fp);
-            fputc(mapPixels2[(posX * posY * 3) + 2], fp);
-        } else {
-            fputc(mapPixels[posX * posY], fp);
-            fputc(mapPixels[(posX * posY * 3) + 1], fp);
-            fputc(mapPixels[(posX * posY * 3) + 2], fp);
-        }*/
     }
 
     fclose(fp);
