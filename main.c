@@ -3,6 +3,7 @@
 
 int main() {
     int posX, posY, i;
+    float ad = 0.5, as = 1;
     char widthTextBuffer[4];
     char heightTextBuffer[4];
     int widthImgDest, heightImgDest;
@@ -11,7 +12,8 @@ int main() {
 
     //////////////////////////////////////////////////////////////////////////
     // load destination image
-    fp = fopen("/home/macabeus/ApenasMeu/Dropbox/CEFET/SistemasEmbarcados/marcadagua/destination.ppm", "rb");
+
+    fp = fopen("destination.ppm", "rb");
     if (fp == NULL) {
         printf("Erro ao tentar carregar o arquivo!");
         return 1;
@@ -51,7 +53,7 @@ int main() {
     unsigned char mapPixelsDest[heightImgDest][widthImgDest][3];
     fseek(fp, 4, SEEK_CUR);
 
-    for (posX = 0, posY = -1; posX != widthImgDest + 1 && posY != 78; posX++) {
+    for (posX = 0, posY = -1; posX != widthImgDest + 1 && posY != heightImgDest; posX++) {
         posX %= widthImgDest;
         if (posX == 0) {
             posY += 1;
@@ -64,10 +66,9 @@ int main() {
 
     //
     fclose(fp);
-
-    //////////////////////////////////////////////////////////////////////////
+     //////////////////////////////////////////////////////////////////////////
     // load source image
-    fp = fopen("/home/macabeus/ApenasMeu/Dropbox/CEFET/SistemasEmbarcados/marcadagua/source.ppm", "rb");
+    fp = fopen("source.ppm", "rb");
     if (fp == NULL) {
         printf("Erro ao tentar carregar o arquivo!");
         return 1;
@@ -100,13 +101,16 @@ int main() {
     }
     heightTextBuffer[i] = '\0';
 
+
     widthImgSour = atoi(widthTextBuffer);
     heightImgSour = atoi(heightTextBuffer);
 
     // fill map pixels
     unsigned char mapPixelsSour[heightImgSour][widthImgSour][3];
+
+
     fseek(fp, 4, SEEK_CUR);
-    for (posX = 0, posY = -1; posX != widthImgSour + 1 && posY != 78; posX++) {
+    for (posX = 0, posY = -1; posX != widthImgSour + 1 && posY != heightImgSour; posX++) {
         posX %= widthImgSour;
         if (posX == 0) {
             posY += 1;
@@ -122,26 +126,26 @@ int main() {
 
     //////////////////////////////////////////////////////////////////////////
     // blend
-    fp = fopen("/home/macabeus/ApenasMeu/Dropbox/CEFET/SistemasEmbarcados/marcadagua/output.ppm", "wb");
-    fputs("P6\n81 78\n255\n", fp); // todo: usar as dimensões de acordo com a maior imagem!
+    fp = fopen("output.ppm", "wb");
+    //fputs("P6\n100 100\n255\n", fp); // todo: usar as dimensões de acordo com a maior imagem!
+    fprintf(fp,"%s\n%d %d\n255\n","P6",widthImgSour,heightImgSour);//Convencionar source como maior imagem
 
-    for (posX = 0, posY = -1; posX != widthImgDest + 1 && posY != 78; posX++) {
+    for (posX = 0, posY = -1; posX != widthImgDest + 1 && posY != heightImgDest; posX++) {
         posX %= widthImgDest;
         if (posX == 0) {
             posY += 1;
         }
 
         if (widthImgSour > posX && heightImgSour > posY) {
-            fputc((char) (mapPixelsDest[posY][posX][0] * 0.5 + mapPixelsSour[posY][posX][0] * 0.5), fp);
-            fputc((char) (mapPixelsDest[posY][posX][1] * 0.5 + mapPixelsSour[posY][posX][1] * 0.5), fp);
-            fputc((char) (mapPixelsDest[posY][posX][2] * 0.5 + mapPixelsSour[posY][posX][2] * 0.5), fp);
+            fputc((char) (mapPixelsDest[posY][posX][0] * ad + mapPixelsSour[posY][posX][0] * as * (1 - ad)), fp);
+            fputc((char) (mapPixelsDest[posY][posX][1] * ad + mapPixelsSour[posY][posX][1] * as * (1 - ad)), fp);
+            fputc((char) (mapPixelsDest[posY][posX][2] * ad + mapPixelsSour[posY][posX][2] * as * (1 - ad)), fp);
         } else {
             fputc(mapPixelsDest[posY][posX][0], fp);
             fputc(mapPixelsDest[posY][posX][1], fp);
             fputc(mapPixelsDest[posY][posX][2], fp);
         }
     }
-
     fclose(fp);
 
     return 0;
