@@ -1,27 +1,28 @@
+/*********************************************************************
+*Blend Mode(Alpha compositing) - Alunos: Bruno Macabeus e David Silva*
+**********************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
 
 int main() {
     int posX, posY, i;
     float ad = 0.5, as = 1;
-    char widthTextBuffer[4];
-    char heightTextBuffer[4];
-    int widthImgDest, heightImgDest;
-    int widthImgSour, heightImgSour;
+    char widthTextBuffer[4], heightTextBuffer[4];
+    int widthImgDest, heightImgDest, widthImgSour, heightImgSour;
     FILE *fp;
 
-    //////////////////////////////////////////////////////////////////////////
-    // load destination image
-
+    // Início carregamento da imagem destination
     fp = fopen("destination.ppm", "rb");
     if (fp == NULL) {
         printf("Erro ao tentar carregar o arquivo!");
         return 1;
     }
+    // Fim carregamento da imagem destination
 
-    // read dimensions
+    // Reposiciona o cursor em 3 bytes a partir do início
     fseek(fp, 3, SEEK_CUR);
 
+    // Início da leitura das dimensões da imagem destination
     for (i = 0; i < 4; i++) {
         fread(widthTextBuffer + i, sizeof(char), 1, fp);
         if (widthTextBuffer[i] == ' ') {
@@ -48,8 +49,9 @@ int main() {
 
     widthImgDest = atoi(widthTextBuffer);
     heightImgDest = atoi(heightTextBuffer);
+    // Fim da leitura das dimensões da imagem destination
 
-    // fill map pixels
+    // Inicio preenchimento mapa de pixes da imagem destination
     unsigned char mapPixelsDest[heightImgDest][widthImgDest][3];
     fseek(fp, 4, SEEK_CUR);
 
@@ -64,19 +66,20 @@ int main() {
         fread(&mapPixelsDest[posY][posX][2], sizeof(char), 1, fp);
     }
 
-    //
+    // Fim preechimento do mapa de pixels da imagem destination
     fclose(fp);
      //////////////////////////////////////////////////////////////////////////
-    // load source image
+    // Início carregamento da imagem source
     fp = fopen("source.ppm", "rb");
     if (fp == NULL) {
         printf("Erro ao tentar carregar o arquivo!");
         return 1;
     }
+    //fim carregamento da imagem source
 
-    // read dimensions
+
     fseek(fp, 3, SEEK_CUR);
-
+    // Início da leitura das dimensões da imagem source
     for (i = 0; i < 4; i++) {
         fread(widthTextBuffer + i, sizeof(char), 1, fp);
         if (widthTextBuffer[i] == ' ') {
@@ -105,7 +108,9 @@ int main() {
     widthImgSour = atoi(widthTextBuffer);
     heightImgSour = atoi(heightTextBuffer);
 
-    // fill map pixels
+    // Fim da leitura das dimensões da imagem source
+
+    // Início do preenchimento do mapa de píxels da imagem source
     unsigned char mapPixelsSour[heightImgSour][widthImgSour][3];
 
 
@@ -121,16 +126,20 @@ int main() {
         fread(&mapPixelsSour[posY][posX][2], sizeof(char), 1, fp);
     }
 
-    //
+    // Fim do preenchimento do mapa de pixels da imagem source
     fclose(fp);
 
-    //////////////////////////////////////////////////////////////////////////
-    // blend
-    fp = fopen("output.ppm", "wb");
-    fprintf(fp,"%s\n%d %d\n255\n","P6",widthImgSour,heightImgSour);//Convencionar source como maior imagem
+    if(widthImgSour < widthImgDest || heightImgSour < heightImgDest){
+        printf("Atencao! Source deve ter dimensoes maiores que destination, caso contrario destination sera cortada!\n");
+        printf("Dimensoes Source: %dx%d\nDimensoes Destination: %dx%d\n",widthImgSour,heightImgSour,widthImgDest,heightImgDest);
+    }
 
-    //printf("%d %d\n",widthImgSour,heightImgSour);
-    //system("pause");
+    //////////////////////////////////////////////////////////////////////////
+    // begin blend alpha compositing
+    fp = fopen("output.ppm", "wb");
+    //Convencionar source como maior imagem
+    fprintf(fp,"%s\n%d %d\n255\n","P6",widthImgSour,heightImgSour);
+
     for (posX = 0, posY = -1; posX != widthImgSour + 1 && posY != heightImgSour; posX++) {
         posX %= widthImgSour;
         if (posX == 0) {
